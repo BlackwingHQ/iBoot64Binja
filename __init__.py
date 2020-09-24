@@ -163,13 +163,33 @@ class iBoot64View(BinaryView):
                 {
                     "fname": "_panic",
                     "identifier": "double panic in ",
-                    # "type": "string"
-                }
+                },
+                {
+                    "fname": "_aes_crypto_cmd",
+                    "identifier": "aes_crypto_cmd",
+                },
+                {
+                    "fname": "_main_task",
+                    "identifier": "debug-uarts",
+                },
+                {
+                    "fname": "_UpdateDeviceTree",
+                    "identifier": "development-cert",
+                },
+                {
+                    "fname": "_pmgr_binning_mode_get_value",
+                    "identifier": "Invalid low",
+                },
+                {
+                    "fname": "_do_printf",
+                    "identifier": "<ptr>",
+                },
+                    
             ]
         }
         for ref in refs["string_reftype"]:
             if self.define_func_from_stringref(ref["identifier"], ref["fname"]) == None:
-                print("Can't find function {}".format(ref["fname"]))
+                print("[!] Can't find function {}".format(ref["fname"]))
         # self.define_func_from_string("double panic in ", "_panic")
         
     def find_reset(self, data):
@@ -230,3 +250,4 @@ class iBoot64View(BinaryView):
 
 
 iBoot64View.register()
+
