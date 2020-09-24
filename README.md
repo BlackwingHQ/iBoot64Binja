@@ -9,16 +9,15 @@ Binary Ninja Binary View plugin for analyzing iBoot, SecureROM, etc. heavily ins
 
 ## Installation
 
-### Method 1
+### Direct Copy Into Binja Plugin Directory
 
-Copy iBoot64Binja to plugin directory
+Copy iBoot64Binja directory to Binja plugin directory
 - OS X: `~/Library/Application Support/Binary Ninja/plugins/`
 - Linux: `~/.binaryninja/plugins/`
 - Windows: `%APPDATA%\Binary Ninja\plugins`
 
-### Method 2 (Not yet supported)
+### Binary Ninja Plugin Manager GUI (Not yet supported)
 
-Install via Binary Ninja Plugin Manager GUI
 - (Linux/Windows) `[CTRL-SHIFT-M]`
 - (MacOS) `[CMD-SHIFT-M]`
 
