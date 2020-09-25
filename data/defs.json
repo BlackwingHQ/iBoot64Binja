@@ -1,0 +1,36 @@
+{
+        "symbol": [
+            {
+                "fname": "_panic",
+                "identifier": "double panic in ",
+                "heuristic": "stringref"
+            },
+            {
+                "fname": "_aes_crypto_cmd",
+                "identifier": "aes_crypto_cmd",
+                "heuristic": "stringref"
+            },
+            {
+                "fname": "_main_task",
+                "identifier": "debug-uarts",
+                "heuristic": "stringref"
+            },
+            {
+                "fname": "_UpdateDeviceTree",
+                "identifier": "development-cert",
+                "heuristic": "stringref"
+            },
+            {
+                "fname": "_pmgr_binning_mode_get_value",
+                "identifier": "Invalid low",
+                "heuristic": "stringref"
+            },
+            {
+                "fname": "_do_printf",
+                "identifier": "<ptr>",
+                "heuristic": "binref"
+            }
+            
+        ]
+}
+
