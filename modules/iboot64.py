@@ -23,6 +23,7 @@ from binaryninja.binaryview import BinaryView, AnalysisCompletionEvent
 from binaryninja.enums import SymbolType, SegmentFlag
 from binaryninja.types import Symbol
 from binaryninja import Settings
+import binascii
 import json
 import os
 import struct
@@ -152,11 +153,23 @@ class iBoot64View(BinaryView):
         for sym in stringrefs:
             if self.define_func_from_stringref(sym['identifier'], sym['fname']) == None:
                 print("[!] Can't find function {}".format(sym['fname']))
+
+    def resolve_byte_sigs(self, defs):
+        bytesigs = [sym for sym in defs['symbol'] if sym['heuristic'] == "bytesig"]
+        for sym in bytesigs:
+            try:
+                signature = binascii.unhexlify(sym['identifier'])
+            except binascii.Error:
+                print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['fname'], sym['identifier']))
+            if self.define_func_from_bytesignature(signature, sym['fname']) == None:
+                print("[!] Can't find function {}".format(sym['fname']))
                 
     def find_interesting(self):
         defs = self.load_defs()
 
         self.resolve_string_refs(defs)
+        
+        self.resolve_byte_sigs(defs)
         
     def find_reset(self, data):
         i = 0
@@ -216,11 +229,39 @@ class iBoot64View(BinaryView):
                 ptr = ptr + 1
         return None
 
-    def define_func_from_bytesig(self, signature, func_name):
+    def define_func_from_bytesignature(self, signature, func_name):
         ptr = self.start
-        addrs = []
         while ptr < self.end:
-            ptr = self.find_next_data
+            ptr = self.find_next_data(ptr, signature)
+            if not ptr:
+                break
+            # Only finds first occurance of signature - might want to warn if muliple hits...
+            func_start = self.get_functions_containing(ptr)[0].lowest_address
+            self.define_function_at_address(func_start, func_name)
+            return func_start
+        return None
+            
+
+    def define_function_at_address(self, address, name):
+        self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, address, name))
+        print("[+] Added function {} at {}".format(name, hex(address)))
+
+        
+    # def define_func_from_bytesig(self, signature, func_name):
+    #     ptr = self.start
+    #     addrs = []
+    #     while ptr < self.end:
+    #         ptr = self.find_next_data
+
+
+
+
+
+
+
+
+
+
 
 
 

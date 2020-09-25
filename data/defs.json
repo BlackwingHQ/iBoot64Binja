@@ -28,9 +28,17 @@
             {
                 "fname": "_do_printf",
                 "identifier": "<ptr>",
-                "heuristic": "binref"
+                "heuristic": "stringref"
+            },
+            {
+                "fname": "_usb_dfu_init",
+                "identifier": "E0031532020080D2",
+                "heuristic": "bytesig"
             }
             
         ]
 }
+
+
+
 

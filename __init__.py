@@ -20,6 +20,8 @@
 
 from .modules import iboot64
  
-print("NewAAAAAA")
 iboot64.iBoot64View.register()
+
+
+
 
