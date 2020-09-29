@@ -19,7 +19,7 @@
 # IN THE SOFTWARE.
 
 from binaryninja.architecture import Architecture
-from binaryninja.binaryview import BinaryView, AnalysisCompletionEvent
+from binaryninja.binaryview import BinaryView, BinaryReader, AnalysisCompletionEvent
 from binaryninja.enums import SymbolType, SegmentFlag, MessageBoxButtonSet, MessageBoxIcon
 from binaryninja.interaction import show_message_box
 from binaryninja.types import Symbol
@@ -149,7 +149,7 @@ class iBoot64View(BinaryView):
     def load_defs(self):
         cur_file_path = os.path.dirname(os.path.abspath(__file__))
         symbol_file_path = os.path.join(cur_file_path, '..', 'data', 'defs.json')
-        print("Trying to load defs file at: {}".format(symbol_file_path))        
+        print("Trying to load defs file at: {}".format(symbol_file_path))
         with open(symbol_file_path, 'r') as f:
             return json.load(f)
 
@@ -176,15 +176,58 @@ class iBoot64View(BinaryView):
                 print("[!] Bad number of occurances for symbol {}: {}".format(sym['fname'], sym['occurances']))
                 continue
 
+    def resolve_byte_sig_pattern(self, identifier):
+        pattern = []
+        for byte in identifier.split(' '):
+            if byte == '?':
+                pattern.append(byte)
+            elif byte != '':
+                pattern.append(int(byte, 16))
+        br = BinaryReader(self)
+        result = 0
+        length = len(pattern) - 1
+        for function in self.functions:
+            br.seek(function.start)
+
+            while self.get_functions_containing(br.offset + length) != None and function in self.get_functions_containing(br.offset + length):
+                found = True
+                count = 0
+                for entry in pattern:
+                    byte = br.read8()
+                    count += 1
+                    if entry != byte and entry != '?':
+                        found = False
+                        break
+
+                br.offset -= count
+
+                if found:
+                    result = br.offset
+                    break
+
+                br.offset += self.get_instruction_length(br.offset)
+
+            if result != 0:
+                break
+        return result
+
     def resolve_byte_sigs(self, defs):
         bytesigs = [sym for sym in defs['symbol'] if sym['heuristic'] == "bytesig"]
         for sym in bytesigs:
-            try:
-                signature = binascii.unhexlify(sym['identifier'])
-            except binascii.Error:
-                print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['fname'], sym['identifier']))
-            if self.define_func_from_bytesignature(signature, sym['fname']) == None:
-                print("[!] Can't find function {}".format(sym['fname']))
+            if "?" in sym['identifier']:
+                addr = self.resolve_byte_sig_pattern(sym['identifier'])
+                if addr != 0:
+                    self.define_function_at_address(addr, sym['fname'])
+                else:
+                    print("[!] Can't find function {}".format(sym['fname']))
+            else:
+                try:
+                    signature = binascii.unhexlify(sym['identifier'])
+                except binascii.Error:
+                    print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['fname'], sym['identifier']))
+                    return
+                if self.define_func_from_bytesignature(signature, sym['fname']) == None:
+                    print("[!] Can't find function {}".format(sym['fname']))
 
     def resolve_constants(self, defs):
         constants = [sym for sym in defs['symbol'] if sym['heuristic'] == "constant"]
@@ -213,18 +256,18 @@ class iBoot64View(BinaryView):
         except:
             return None
 
-    
+
     def find_interesting(self):
         defs = self.load_defs()
 
         self.resolve_string_refs(defs)
-        
+
         self.resolve_byte_sigs(defs)
 
         self.resolve_constants(defs)
 
         self.resolve_n_string_refs(defs)
-        
+
     def find_reset(self, data):
         i = 0
         end = data.find_next_data(0, b'iBoot for')
@@ -299,8 +342,8 @@ class iBoot64View(BinaryView):
                     return func_start
             ptr = ptr + 1
         return None
-            
-                
+
+
     def define_func_from_bytesignature(self, signature, func_name):
         ptr = self.start
         while ptr < self.end:
@@ -312,7 +355,7 @@ class iBoot64View(BinaryView):
             self.define_function_at_address(func_start, func_name)
             return func_start
         return None
-            
+
 
     def define_func_from_constant(self, const, func_name):
         ptr = self.start
@@ -324,12 +367,12 @@ class iBoot64View(BinaryView):
             self.define_function_at_address(func_start, func_name)
             return func_start
         return None
-        
+
     def define_function_at_address(self, address, name):
         self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, address, name))
         print("[+] Added function {} at {}".format(name, hex(address)))
 
-        
+
     # def define_func_from_bytesig(self, signature, func_name):
     #     ptr = self.start
     #     addrs = []
