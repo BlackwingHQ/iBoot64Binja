@@ -164,6 +164,18 @@ class iBoot64View(BinaryView):
             if self.define_func_from_stringref(sym['identifier'], sym['fname']) == None:
                 print("[!] Can't find function {}".format(sym['fname']))
 
+    def resolve_n_string_refs(self, defs):
+        stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "nstringrefs"]
+        for sym in stringrefs:
+            try:
+                occur = sym['occurances']
+                if isinstance(occur, int):
+                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['fname'], sym['occurances']) == None:
+                        print("[!] Can't find function {}".format(sym['fname']))
+            except:
+                print("[!] Bad number of occurances for symbol {}: {}".format(sym['fname'], sym['occurances']))
+                continue
+
     def resolve_byte_sigs(self, defs):
         bytesigs = [sym for sym in defs['symbol'] if sym['heuristic'] == "bytesig"]
         for sym in bytesigs:
@@ -210,6 +222,8 @@ class iBoot64View(BinaryView):
         self.resolve_byte_sigs(defs)
 
         self.resolve_constants(defs)
+
+        self.resolve_n_string_refs(defs)
         
     def find_reset(self, data):
         i = 0
@@ -270,6 +284,23 @@ class iBoot64View(BinaryView):
                 ptr = ptr + 1
         return None
 
+    def define_func_from_n_stringrefs(self, needle, func_name, occurs):
+        ptr = self.start
+        while ptr < self.end:
+            refs = []
+            ptr = self.find_next_data(ptr, bytes(needle.encode("utf-8")))
+            if not ptr:
+                break
+            for ref in self.get_code_refs(ptr):
+                refs.append(ref.function.lowest_address)
+            for func_start in refs:
+                if refs.count(func_start) == occurs:
+                    self.define_function_at_address(func_start, func_name)
+                    return func_start
+            ptr = ptr + 1
+        return None
+            
+                
     def define_func_from_bytesignature(self, signature, func_name):
         ptr = self.start
         while ptr < self.end:
@@ -285,7 +316,6 @@ class iBoot64View(BinaryView):
 
     def define_func_from_constant(self, const, func_name):
         ptr = self.start
-        print("Constant: ", const)
         while ptr < self.end:
             ptr = self.find_next_constant(ptr, const)
             if not ptr:
