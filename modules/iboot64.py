@@ -20,7 +20,8 @@
 
 from binaryninja.architecture import Architecture
 from binaryninja.binaryview import BinaryView, AnalysisCompletionEvent
-from binaryninja.enums import SymbolType, SegmentFlag
+from binaryninja.enums import SymbolType, SegmentFlag, MessageBoxButtonSet, MessageBoxIcon
+from binaryninja.interaction import show_message_box
 from binaryninja.types import Symbol
 from binaryninja import Settings
 import binascii
@@ -85,6 +86,15 @@ class iBoot64View(BinaryView):
             iboot_version = data.get_ascii_string_at(iBootVersionOffset).value
             if iboot_version.startswith("iBoot"):
                 # Save version to global for future ref?
+                # choice = show_message_box(
+                #     "iBoot64Binja Loader",
+                #     "This appears to be an iBoot binary - Load iBoot64Binja?",
+                #     MessageBoxButtonSet.YesNoCancelButtonSet,
+                #     MessageBoxIcon.InformationIcon)
+                # if choice == 1:
+                #     return True
+                # else:
+                #     return False
                 return True
             return False
         except AttributeError:
@@ -163,13 +173,43 @@ class iBoot64View(BinaryView):
                 print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['fname'], sym['identifier']))
             if self.define_func_from_bytesignature(signature, sym['fname']) == None:
                 print("[!] Can't find function {}".format(sym['fname']))
-                
+
+    def resolve_constants(self, defs):
+        constants = [sym for sym in defs['symbol'] if sym['heuristic'] == "constant"]
+        for sym in constants:
+            const = self.convert_const(sym['identifier'])
+            if const == None:
+                print("[!] Bad constant definition for symbol {}: {}".format(sym['fname'], sym['identifier']))
+            elif self.define_func_from_constant(const, sym['fname']) == None:
+                print("[!] Can't find function {}".format(sym['fname']))
+
+
+    def convert_const(self, const):
+        try:
+            if isinstance(const, int):
+                return const
+            bin_const = binascii.unhexlify(const.replace('0x', ''))
+            if len(bin_const) == 2:
+                fmt = ">H"
+            elif len(bin_const) == 4:
+                fmt = ">I"
+            elif len(bin_const) == 8:
+                fmt = ">Q"
+            else:
+                return None
+            return struct.unpack(fmt, bin_const)[0]
+        except:
+            return None
+
+    
     def find_interesting(self):
         defs = self.load_defs()
 
         self.resolve_string_refs(defs)
         
         self.resolve_byte_sigs(defs)
+
+        self.resolve_constants(defs)
         
     def find_reset(self, data):
         i = 0
@@ -222,8 +262,9 @@ class iBoot64View(BinaryView):
             refs = self.get_code_refs(ptr)
             if refs:
                 func_start = refs[0].function.lowest_address
-                self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, func_start, func_name))
-                print("[+] Added function {} at {}".format(func_name, hex(func_start)))
+                self.define_function_at_address(func_start, func_name)
+                # self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, func_start, func_name))
+                # print("[+] Added function {} at {}".format(func_name, hex(func_start)))
                 return func_start
             else:
                 ptr = ptr + 1
@@ -242,6 +283,18 @@ class iBoot64View(BinaryView):
         return None
             
 
+    def define_func_from_constant(self, const, func_name):
+        ptr = self.start
+        print("Constant: ", const)
+        while ptr < self.end:
+            ptr = self.find_next_constant(ptr, const)
+            if not ptr:
+                break
+            func_start = self.get_functions_containing(ptr)[0].lowest_address
+            self.define_function_at_address(func_start, func_name)
+            return func_start
+        return None
+        
     def define_function_at_address(self, address, name):
         self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, address, name))
         print("[+] Added function {} at {}".format(name, hex(address)))
@@ -252,6 +305,9 @@ class iBoot64View(BinaryView):
     #     addrs = []
     #     while ptr < self.end:
     #         ptr = self.find_next_data
+
+
+
 
 
 
