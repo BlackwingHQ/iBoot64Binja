@@ -97,9 +97,9 @@ Python>len([ref.frm for ref in idautils.XrefsTo(0x180108088)])
 0x3
 ```
 
-![](https://user-images.githubusercontent.com/6217759/94697102-caf97d00-0305-11eb-827f-490a68d6d589.png)
-![](https://user-images.githubusercontent.com/6217759/94697130-d2208b00-0305-11eb-9b11-304ec3f8e5ab.png)
-![](https://user-images.githubusercontent.com/6217759/94697159-d9e02f80-0305-11eb-9e2e-2862d97c4489.png)
+![](https://user-images.githubusercontent.com/6217759/94699047-e8c7e180-0307-11eb-914e-ddae3de0746a.png)
+![](https://user-images.githubusercontent.com/6217759/94699171-07c67380-0308-11eb-9129-18da15557f56.png)
+![](https://user-images.githubusercontent.com/6217759/94699379-41977a00-0308-11eb-8b6f-8b1c3708b715.png)
 
 Binary Ninja's `get_code_refs`:
 
