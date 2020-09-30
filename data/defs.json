@@ -72,12 +72,32 @@
                 "heuristic": "bytesig"
             },
             {
+                "name": "_usb_init_with_controller",
+                "type": "function",
+                "identifier": "_usb_dfu_init",
+                "comment": "",
+                "heuristic": "xrefsto"
+            },
+            {
+                "name": "_usb_init",
+                "type": "function",
+                "identifier": "_usb_init_with_controller",
+                "comment": "",
+                "heuristic": "xrefsto"
+            },
+            {
+                "name": "_platform_debug_init",
+                "type": "function",
+                "identifier": "_usb_init",
+                "comment": "",
+                "heuristic": "xrefsto"
+            },
+            {
                 "name": "_macho_valid",
                 "type": "function",
                 "identifier": "0xFEEDFACF",
                 "comment": "",
                 "heuristic": "constant"
-                
             },
             {
                 "name": "_loaded_kernelcache",
@@ -85,7 +105,6 @@
                 "identifier": "_macho_load",
                 "comment": "",
                 "heuristic": "xrefsto"
-                
             },
             {
                 "name": "_load_kernelcache",
@@ -93,8 +112,7 @@
                 "identifier": "_loaded_kernelcache",
                 "comment": "",
                 "heuristic": "xrefsto"
-                
-            } 
+            }
         ]
 }
 
