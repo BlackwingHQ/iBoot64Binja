@@ -28,7 +28,7 @@ Copy to `~/.binaryninja/plugins/` or use Plugin Manager
 
 This plugin has been tested with the following minimum version of Binary Ninja:
 
-* 2.0
+* 2.1.2263
 
 ## License
 
