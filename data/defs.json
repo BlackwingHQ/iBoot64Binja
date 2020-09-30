@@ -78,9 +78,23 @@
                 "comment": "",
                 "heuristic": "constant"
                 
-            }
-            
-            
+            },
+            {
+                "name": "_loaded_kernelcache",
+                "type": "function",
+                "identifier": "_macho_load",
+                "comment": "",
+                "heuristic": "xrefsto"
+                
+            },
+            {
+                "name": "_load_kernelcache",
+                "type": "function",
+                "identifier": "_loaded_kernelcache",
+                "comment": "",
+                "heuristic": "xrefsto"
+                
+            } 
         ]
 }
 

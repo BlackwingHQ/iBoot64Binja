@@ -194,7 +194,13 @@ class iBoot64View(BinaryView):
             elif self.define_func_from_constant(const, sym['name']) == None:
                 print("[!] Can't find function {}".format(sym['name']))
 
-
+    def resolve_xrefs_to(self, defs):
+        xrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "xrefsto"]
+        for sym in xrefs:
+            if self.define_func_from_xref_to(sym['identifier'], sym['name']) == None:
+                print("[!] Can't find function {}".format(sym['name']))
+                
+                
     def convert_const(self, const):
         try:
             if isinstance(const, int):
@@ -223,6 +229,8 @@ class iBoot64View(BinaryView):
         self.resolve_constants(defs)
 
         self.resolve_n_string_refs(defs)
+
+        self.resolve_xrefs_to(defs)
         
     def find_reset(self, data):
         i = 0
@@ -325,6 +333,22 @@ class iBoot64View(BinaryView):
             if not ptr:
                 break
             func_start = self.get_functions_containing(ptr)[0].lowest_address
+            self.define_function_at_address(func_start, func_name)
+            return func_start
+        return None
+
+    def define_func_from_xref_to(self, ref, func_name):
+        ptr = self.start
+        while ptr < self.end:
+            syms = self.get_symbols_by_name(ref)
+            if len(syms) != 1:
+                return None
+            if syms[0].type != SymbolType.FunctionSymbol:
+                return None
+            ptr = syms[0].address
+            if not ptr:
+                break
+            func_start = self.get_code_refs(ptr)[0].function.start
             self.define_function_at_address(func_start, func_name)
             return func_start
         return None
