@@ -98,6 +98,7 @@ Python>len([ref.frm for ref in idautils.XrefsTo(0x180108088)])
 ```
 
 **Direct Reference**
+
 ![](https://user-images.githubusercontent.com/6217759/94699047-e8c7e180-0307-11eb-914e-ddae3de0746a.png)
 
 
@@ -109,12 +110,15 @@ Binary Ninja's `get_code_refs`:
 ```
 
 **Direct Reference**
+
 ![](https://user-images.githubusercontent.com/6217759/94697288-07c57400-0306-11eb-8d38-fb821bd0b779.png)
 
 **Indirect Reference**
+
 ![](https://user-images.githubusercontent.com/6217759/94697475-3cd1c680-0306-11eb-83e6-bbaadc19dfd2.png)
 
 **Indirect Reference**
+
 ![](https://user-images.githubusercontent.com/6217759/94697741-88847000-0306-11eb-84db-6f0bd3770137.png)
 
 Example:
