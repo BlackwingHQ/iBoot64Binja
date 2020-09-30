@@ -20,7 +20,7 @@ Copy to `~/.binaryninja/plugins/` or use Plugin Manager
 
 ## Minimum Version
 
-This plugin requires the following minimum version of Binary Ninja:
+This plugin has been tested with the following minimum version of Binary Ninja:
 
 * 2.0
 
