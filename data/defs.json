@@ -60,7 +60,7 @@
                 "fname": "_macho_load",
                 "type": "function",
                 "identifier": "__PAGEZERO",
-                "occurances": 5,
+                "refcount": 5,
                 "comment": "",
                 "heuristic": "nstringrefs"
             },

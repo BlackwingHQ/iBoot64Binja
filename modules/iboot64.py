@@ -168,12 +168,12 @@ class iBoot64View(BinaryView):
         stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "nstringrefs"]
         for sym in stringrefs:
             try:
-                occur = sym['occurances']
-                if isinstance(occur, int):
-                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['fname'], sym['occurances']) == None:
+                refcount = sym['refcount']
+                if isinstance(refcount, int):
+                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['fname'], sym['refcount']) == None:
                         print("[!] Can't find function {}".format(sym['fname']))
             except:
-                print("[!] Bad number of occurances for symbol {}: {}".format(sym['fname'], sym['occurances']))
+                print("[!] Bad refcount for symbol {}: {}".format(sym['fname'], sym['refcount']))
                 continue
 
     def resolve_byte_sigs(self, defs):
@@ -284,7 +284,7 @@ class iBoot64View(BinaryView):
                 ptr = ptr + 1
         return None
 
-    def define_func_from_n_stringrefs(self, needle, func_name, occurs):
+    def define_func_from_n_stringrefs(self, needle, func_name, refcount):
         ptr = self.start
         while ptr < self.end:
             refs = []
@@ -294,7 +294,7 @@ class iBoot64View(BinaryView):
             for ref in self.get_code_refs(ptr):
                 refs.append(ref.function.lowest_address)
             for func_start in refs:
-                if refs.count(func_start) == occurs:
+                if refs.count(func_start) == refcount:
                     self.define_function_at_address(func_start, func_name)
                     return func_start
             ptr = ptr + 1
