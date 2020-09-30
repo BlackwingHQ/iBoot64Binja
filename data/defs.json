@@ -1,63 +1,63 @@
 {
         "symbol": [
             {
-                "fname": "_panic",
+                "name": "_panic",
                 "type": "function",
                 "identifier": "double panic in ",
                 "comment": "",
                 "heuristic": "stringref"
             },
             {
-                "fname": "_aes_crypto_cmd",
+                "name": "_aes_crypto_cmd",
                 "type": "function",
                 "identifier": "aes_crypto_cmd",
                 "comment": "",
                 "heuristic": "stringref"
             },
             {
-                "fname": "_main_task",
+                "name": "_main_task",
                 "type": "function",
                 "identifier": "debug-uarts",
                 "comment": "",
                 "heuristic": "stringref"
             },
             {
-                "fname": "_UpdateDeviceTree",
+                "name": "_UpdateDeviceTree",
                 "type": "function",
                 "identifier": "development-cert",
                 "comment": "",
                 "heuristic": "stringref"
             },
             {
-                "fname": "_pmgr_binning_mode_get_value",
+                "name": "_pmgr_binning_mode_get_value",
                 "type": "function",
                 "identifier": "Invalid low",
                 "comment": "",
                 "heuristic": "stringref"
             },
             {
-                "fname": "_do_printf",
+                "name": "_do_printf",
                 "type": "function",
                 "identifier": "<ptr>",
                 "comment": "",
                 "heuristic": "stringref"
             },
             {
-                "fname": "_do_go",
+                "name": "_do_go",
                 "type": "function",
                 "identifier": "Memory image not valid",
                 "comment": "",
                 "heuristic": "stringref"
             },
             {
-                "fname": "_image4_get_partial",
+                "name": "_image4_get_partial",
                 "type": "function",
                 "identifier": "IMG4",
                 "comment": "",
                 "heuristic": "stringref"
             },
             {
-                "fname": "_macho_load",
+                "name": "_macho_load",
                 "type": "function",
                 "identifier": "__PAGEZERO",
                 "refcount": 5,
@@ -65,14 +65,14 @@
                 "heuristic": "nstringrefs"
             },
             {
-                "fname": "_usb_dfu_init",
+                "name": "_usb_dfu_init",
                 "type": "function",
                 "identifier": "E0031532020080D2",
                 "comment": "",
                 "heuristic": "bytesig"
             },
             {
-                "fname": "_macho_valid",
+                "name": "_macho_valid",
                 "type": "function",
                 "identifier": "0xFEEDFACF",
                 "comment": "",

@@ -161,8 +161,8 @@ class iBoot64View(BinaryView):
     def resolve_string_refs(self, defs):
         stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "stringref"]
         for sym in stringrefs:
-            if self.define_func_from_stringref(sym['identifier'], sym['fname']) == None:
-                print("[!] Can't find function {}".format(sym['fname']))
+            if self.define_func_from_stringref(sym['identifier'], sym['name']) == None:
+                print("[!] Can't find function {}".format(sym['name']))
 
     def resolve_n_string_refs(self, defs):
         stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "nstringrefs"]
@@ -170,10 +170,10 @@ class iBoot64View(BinaryView):
             try:
                 refcount = sym['refcount']
                 if isinstance(refcount, int):
-                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['fname'], sym['refcount']) == None:
-                        print("[!] Can't find function {}".format(sym['fname']))
+                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['name'], sym['refcount']) == None:
+                        print("[!] Can't find function {}".format(sym['name']))
             except:
-                print("[!] Bad refcount for symbol {}: {}".format(sym['fname'], sym['refcount']))
+                print("[!] Bad refcount for symbol {}: {}".format(sym['name'], sym['refcount']))
                 continue
 
     def resolve_byte_sigs(self, defs):
@@ -182,18 +182,18 @@ class iBoot64View(BinaryView):
             try:
                 signature = binascii.unhexlify(sym['identifier'])
             except binascii.Error:
-                print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['fname'], sym['identifier']))
-            if self.define_func_from_bytesignature(signature, sym['fname']) == None:
-                print("[!] Can't find function {}".format(sym['fname']))
+                print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['name'], sym['identifier']))
+            if self.define_func_from_bytesignature(signature, sym['name']) == None:
+                print("[!] Can't find function {}".format(sym['name']))
 
     def resolve_constants(self, defs):
         constants = [sym for sym in defs['symbol'] if sym['heuristic'] == "constant"]
         for sym in constants:
             const = self.convert_const(sym['identifier'])
             if const == None:
-                print("[!] Bad constant definition for symbol {}: {}".format(sym['fname'], sym['identifier']))
-            elif self.define_func_from_constant(const, sym['fname']) == None:
-                print("[!] Can't find function {}".format(sym['fname']))
+                print("[!] Bad constant definition for symbol {}: {}".format(sym['name'], sym['identifier']))
+            elif self.define_func_from_constant(const, sym['name']) == None:
+                print("[!] Can't find function {}".format(sym['name']))
 
 
     def convert_const(self, const):

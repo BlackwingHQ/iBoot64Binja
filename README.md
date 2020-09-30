@@ -26,7 +26,7 @@ Copy iBoot64Binja directory to Binja plugin directory
 
 Symbol definitions are in `defs.json` under the `data/` directory. Each symbol is modeled as a JSON object with the following properties:
 
-- `fname`: Symbol name
+- `name`: Symbol name
 - `type`: Symbol type (currently only `function`)
 - `identifier`: Identifier to use to resolve symbol
 - `heuristic`: Heuristic to use for symbol resolution (Currently supported heuristics are detailed below)
@@ -35,32 +35,32 @@ Symbol definitions are in `defs.json` under the `data/` directory. Each symbol i
 The following heuristics are currently supported (will continue to support more):
 
 ### String reference (`stringref`)
-Simple heuristic finds first occurance of `identifier` with cross-references, and names referenced function with `fname`.
+Simple heuristic finds first occurance of `identifier` with cross-references, and names referenced function with `name`.
 
 Example:
 ```json
 {
-    "fname": "_do_go",
+    "name": "_do_go",
     "identifier": "Memory image not valid",
     "heuristic": "stringref"
 }
 ```
 
 ### Byte Signature (`bytesig`)
-Names first function containing signature defined in `identifier` (hex encoded sequence of bytes) as `fname`.
+Names first function containing signature defined in `identifier` (hex encoded sequence of bytes) as `name`.
 **Note:** `identifier` _must_ be a hex encoded sequence of bytes enclosed in quotation marks.
 
 Example:
 ```json
 {
-    "fname": "_usb_dfu_init",
+    "name": "_usb_dfu_init",
     "identifier": "E0031532020080D2",
     "heuristic": "bytesig"
 }
 ```
 
 ### Constant (`constant`)
-Names first function containing constant defined in `identifier` as `fname`.
+Names first function containing constant defined in `identifier` as `name`.
 **Note:** `identifier` can be one of the following:
 - Numeric literal (e.g. 1234567)
 - String containing 16, 32, or 64 bit hex number (e.g. "0xFACF", "0xFEEDFACF", "0xDEADBEEFFEEDFACF")
@@ -68,7 +68,7 @@ Names first function containing constant defined in `identifier` as `fname`.
 Examples:
 ```json
 {
-    "fname": "_macho_valid",
+    "name": "_macho_valid",
     "identifier": "0xFEEDFACF",
     "heuristic": "constant"
                 
@@ -76,20 +76,29 @@ Examples:
 ```
 ```json
 {
-    "fname": "_another_func",
+    "name": "_another_func",
     "identifier": 2293171722,
     "heuristic": "constant"
                 
 }
 ```
 
-### n String Refs (`nstringrefs`)
-Names function with exactly `refcount` number of references to string `identifier` as `fname`.
+### n String Refs (`nstringref`)
+Names function with exactly `occurances` number of references to string `identifier` as `name`.
+**Note:** This heuristic is pretty weak. It will fail if the target refcount changes. 
+**Note 2:** Binary Ninja's `get_code_refs()` uses a different method for counting Xrefs to a data address than IDA's `XrefsTo()`. 
+`XrefsTo(addr)` returns direct references to the specified address, whereas `get_code_refs(addr)` also returns indirect references (i.e. via registers).
+Therefore, xref counts will differ between IDA and Binja.
+
+IDA's `XrefsTo`:
+
+Binary Ninja's `get_code_refs`:
+
 
 Example:
 ```json
 {
-    "fname": "_macho_load",
+    "name": "_macho_load",
     "type": "function",
     "identifier": "__PAGEZERO",
     "refcount": 5,
