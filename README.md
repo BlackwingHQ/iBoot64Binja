@@ -92,7 +92,7 @@ Therefore, xref counts will differ between IDA and Binja.
 
 IDA's `XrefsTo`:
 
-```
+```python
 Python>len([ref.frm for ref in idautils.XrefsTo(0x180108088)])
 0x3
 ```
