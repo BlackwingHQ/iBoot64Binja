@@ -92,7 +92,10 @@ Therefore, xref counts will differ between IDA and Binja.
 
 IDA's `XrefsTo`:
 
-![IDA Pro `XrefsTo`](https://user-images.githubusercontent.com/6217759/94696802-748c3e80-0305-11eb-8ea8-cf8682b339d2.png)
+```
+Python>len([ref.frm for ref in idautils.XrefsTo(0x180108088)])
+0x3
+```
 
 - ![](https://user-images.githubusercontent.com/6217759/94697102-caf97d00-0305-11eb-827f-490a68d6d589.png)
 - ![](https://user-images.githubusercontent.com/6217759/94697130-d2208b00-0305-11eb-9b11-304ec3f8e5ab.png)
@@ -100,7 +103,10 @@ IDA's `XrefsTo`:
 
 Binary Ninja's `get_code_refs`:
 
-![Binary Ninja `get_code_refs`](https://user-images.githubusercontent.com/6217759/94696915-91c10d00-0305-11eb-8ce4-1b09a5534ce7.png)
+```python
+>>> len([ref.address for ref in bv.get_code_refs(0x180108088)])
+8
+```
 
 - ![](https://user-images.githubusercontent.com/6217759/94697288-07c57400-0306-11eb-8d38-fb821bd0b779.png)
 - ![](https://user-images.githubusercontent.com/6217759/94697350-1b70da80-0306-11eb-8db1-c28bc7777bca.png)
