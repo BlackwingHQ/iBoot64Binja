@@ -67,8 +67,8 @@
             {
                 "fname": "_usb_dfu_init",
                 "type": "function",
-                "identifier": "E0031532020080D2",
-                "comment": "",
+                "identifier": "E1 03 40 F9 ? ? ? ? 02 00 80 D2 ? ? ? 94",
+                "comment": "E0031532020080D2",
                 "heuristic": "bytesig"
             },
             {
@@ -77,10 +77,10 @@
                 "identifier": "0xFEEDFACF",
                 "comment": "",
                 "heuristic": "constant"
-                
+
             }
-            
-            
+
+
         ]
 }
 
