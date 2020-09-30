@@ -116,7 +116,7 @@ Python>len([ref.frm for ref in idautils.XrefsTo(0x180108088)])
 ![](https://user-images.githubusercontent.com/6217759/94699047-e8c7e180-0307-11eb-914e-ddae3de0746a.png)
 
 
-Binary Ninja's `get_code_refs`:
+Binary Ninja's `get_code_refs` (same binary):
 
 ```python
 >>> len([ref.address for ref in bv.get_code_refs(0x180108088)])
