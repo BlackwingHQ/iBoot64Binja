@@ -1,26 +1,32 @@
-# iBoot64Binja
+# iBoot64Binja (v0.1.1)
+Author: **Blackwing Intelligence**
 
-## Introduction
-Binary Ninja Binary View plugin for analyzing iBoot, SecureROM, etc. heavily inspired by @argp's iBoot64helper IDA loader (https://github.com/argp/iBoot64helper).
+_Binary View for loading iBoot, SecureROM, etc. firmware_
 
-- Identifies iBoot / SecureROM firmwares
-- Finds target load address and performs rebase for accurate analysis
-- Restores some interesting symbols based on various heuristics
 
-## Installation
+## Installation Instructions
 
-### Direct Copy Into Binja Plugin Directory
+### Darwin
 
-Copy iBoot64Binja directory to Binja plugin directory
-- OS X: `~/Library/Application Support/Binary Ninja/plugins/`
-- Linux: `~/.binaryninja/plugins/`
-- Windows: `%APPDATA%\Binary Ninja\plugins`
+Copy to `~/Library/Application Support/Binary Ninja/plugins/` or use Plugin Manager
 
-### Binary Ninja Plugin Manager GUI (Not yet supported)
+### Windows
 
-- (Linux/Windows) `[CTRL-SHIFT-M]`
-- (MacOS) `[CMD-SHIFT-M]`
+Copy to `%APPDATA%\Binary Ninja\plugins` or use Plugin Manager
 
+### Linux
+
+Copy to `~/.binaryninja/plugins/` or use Plugin Manager
+
+## Minimum Version
+
+This plugin requires the following minimum version of Binary Ninja:
+
+* 2100
+
+## License
+
+This plugin is released under a MIT license.
 
 ## Symbol Definitions
 
