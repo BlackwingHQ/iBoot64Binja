@@ -4,6 +4,12 @@ Author: **Blackwing Intelligence**
 _Binary View for loading iBoot, SecureROM, etc. firmware_
 
 
+## Description 
+Binary Ninja Binary View plugin for analyzing iBoot, SecureROM, etc. heavily inspired by @argp's iBoot64helper IDA loader (https://github.com/argp/iBoot64helper).	
+- Identifies iBoot / SecureROM firmwares	
+- Finds target load address and performs rebase for accurate analysis	
+- Restores some interesting symbols based on various heuristics
+
 ## Installation Instructions
 
 ### Darwin
