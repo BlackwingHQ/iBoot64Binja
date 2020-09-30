@@ -97,8 +97,13 @@ Python>len([ref.frm for ref in idautils.XrefsTo(0x180108088)])
 0x3
 ```
 
+**First ref:**
 ![](https://user-images.githubusercontent.com/6217759/94699047-e8c7e180-0307-11eb-914e-ddae3de0746a.png)
+
+**Second ref:**
 ![](https://user-images.githubusercontent.com/6217759/94699171-07c67380-0308-11eb-9129-18da15557f56.png)
+
+**Third ref:**
 ![](https://user-images.githubusercontent.com/6217759/94699379-41977a00-0308-11eb-8b6f-8b1c3708b715.png)
 
 Binary Ninja's `get_code_refs`:
