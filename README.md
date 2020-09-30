@@ -22,7 +22,7 @@ Copy to `~/.binaryninja/plugins/` or use Plugin Manager
 
 This plugin requires the following minimum version of Binary Ninja:
 
-* 2100
+* 2.0
 
 ## License
 
