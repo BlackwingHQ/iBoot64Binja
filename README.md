@@ -83,8 +83,8 @@ Examples:
 }
 ```
 
-### n String Refs (`nstringref`)
-Names function with exactly `occurances` number of references to string `identifier` as `fname`.
+### n String Refs (`nstringrefs`)
+Names function with exactly `refcount` number of references to string `identifier` as `fname`.
 **Note:** This heuristic is pretty weak. It will fail if the target refcount changes. 
 **Note 2:** Binary Ninja's `get_code_refs()` uses a different method for counting Xrefs to a data address than IDA's `XrefsTo()`. 
 `XrefsTo(addr)` returns direct references to the specified address, whereas `get_code_refs(addr)` also returns indirect references (i.e. via registers).
@@ -92,8 +92,24 @@ Therefore, xref counts will differ between IDA and Binja.
 
 IDA's `XrefsTo`:
 
+![IDA Pro `XrefsTo`](https://user-images.githubusercontent.com/6217759/94696802-748c3e80-0305-11eb-8ea8-cf8682b339d2.png)
+
+- ![](https://user-images.githubusercontent.com/6217759/94697102-caf97d00-0305-11eb-827f-490a68d6d589.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697130-d2208b00-0305-11eb-9b11-304ec3f8e5ab.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697159-d9e02f80-0305-11eb-9e2e-2862d97c4489.png)
+
 Binary Ninja's `get_code_refs`:
 
+![Binary Ninja `get_code_refs`](https://user-images.githubusercontent.com/6217759/94696915-91c10d00-0305-11eb-8ce4-1b09a5534ce7.png)
+
+- ![](https://user-images.githubusercontent.com/6217759/94697288-07c57400-0306-11eb-8d38-fb821bd0b779.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697350-1b70da80-0306-11eb-8db1-c28bc7777bca.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697404-2af02380-0306-11eb-8bd0-581b82d73437.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697475-3cd1c680-0306-11eb-83e6-bbaadc19dfd2.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697543-5246f080-0306-11eb-9f25-f49913897710.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697614-638ffd00-0306-11eb-8945-a25971a1029a.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697679-77d3fa00-0306-11eb-8431-3c1f74aca313.png)
+- ![](https://user-images.githubusercontent.com/6217759/94697741-88847000-0306-11eb-84db-6f0bd3770137.png)
 
 Example:
 ```json
