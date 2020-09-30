@@ -85,7 +85,21 @@ Examples:
 
 ### n String Refs (`nstringrefs`)
 Names function with exactly `refcount` number of references to string `identifier` as `fname`.
+
+Example:
+```json
+{
+    "fname": "_macho_load",
+    "type": "function",
+    "identifier": "__PAGEZERO",
+    "refcount": 5,
+    "comment": "",
+    "heuristic": "nstringrefs"
+}
+```
+
 **Note:** This heuristic is pretty weak. It will fail if the target refcount changes. 
+
 **Note 2:** Binary Ninja's `get_code_refs()` uses a different method for counting Xrefs to a data address than IDA's `XrefsTo()`. 
 `XrefsTo(addr)` returns direct references to the specified address, whereas `get_code_refs(addr)` also returns indirect references (i.e. via registers).
 Therefore, xref counts will differ between IDA and Binja.
@@ -121,15 +135,5 @@ Binary Ninja's `get_code_refs`:
 
 ![](https://user-images.githubusercontent.com/6217759/94697741-88847000-0306-11eb-84db-6f0bd3770137.png)
 
-Example:
-```json
-{
-    "fname": "_macho_load",
-    "type": "function",
-    "identifier": "__PAGEZERO",
-    "refcount": 5,
-    "comment": "",
-    "heuristic": "nstringrefs"
-}
-```
+
 
