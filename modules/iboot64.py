@@ -155,7 +155,6 @@ class iBoot64View(BinaryView):
 
     def on_complete(self, blah):
         print("[+] Analysis complete. Finding interesting functions...")
-
         self.find_interesting()
 
     def resolve_string_refs(self, defs):
@@ -227,9 +226,9 @@ class iBoot64View(BinaryView):
         
     def find_reset(self, data):
         i = 0
-        end = data.find_next_data(0, b'iBoot for')
+        end = data.find_next_data(0, 'iBoot for')
         if end is None:
-            end = data.find_next_data(0, b'SecureROM for')
+            end = data.find_next_data(0, 'SecureROM for')
             if end is None:
                 return None
         while i < end:
@@ -246,31 +245,33 @@ class iBoot64View(BinaryView):
                 continue
         return None
 
-    def find_panic(self):
-        ptr = self.start
-        while ptr < self.end:
-            ptr = self.find_next_data(ptr, b'double panic in ')
+    # def find_panic(self):
+    #     ptr = self.start
+    #     while ptr < self.end:
+    #         ptr = self.find_next_data(ptr, b'double panic in ')
 
-            refs = self.get_code_refs(ptr)
-            if refs:
-                for i in refs:
-                    func_start = i.function.lowest_address
-                    # self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
-                    self.define_user_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
-                    # TODO: Improve - Currently breaks on first ref
-                    return func_start
-            else:
-                ptr = ptr + 1
-        # Not sure the Binja idiomatic thing to return
-        # return -1
-        return None
+    #         refs = self.get_code_refs(ptr)
+    #         if refs:
+    #             for i in refs:
+    #                 func_start = i.function.lowest_address
+    #                 # self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
+    #                 self.define_user_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
+    #                 # TODO: Improve - Currently breaks on first ref
+    #                 return func_start
+    #         else:
+    #             ptr = ptr + 1
+    #     # Not sure the Binja idiomatic thing to return
+    #     # return -1
+    #     return None
 
     def define_func_from_stringref(self, needle, func_name):
         ptr = self.start
         while ptr < self.end:
             # using bv.find_next_data instead of bv.find_next_text here because it seems to be _way_ faster
             # ptr = self.find_next_text(ptr, needle)
-            ptr = self.find_next_data(ptr, bytes(needle.encode("utf-8")))
+            # ptr = self.find_next_data(ptr, bytes(needle.encode("utf-8")))
+            ptr = self.find_next_data(ptr, needle)
+
             if not ptr:
                 break
             refs = self.get_code_refs(ptr)
@@ -288,7 +289,7 @@ class iBoot64View(BinaryView):
         ptr = self.start
         while ptr < self.end:
             refs = []
-            ptr = self.find_next_data(ptr, bytes(needle.encode("utf-8")))
+            ptr = self.find_next_data(ptr, needle)
             if not ptr:
                 break
             for ref in self.get_code_refs(ptr):
@@ -304,6 +305,9 @@ class iBoot64View(BinaryView):
     def define_func_from_bytesignature(self, signature, func_name):
         ptr = self.start
         while ptr < self.end:
+            # Have to convert signature byearray to a string since find_next_data can't handle bytes on stable
+            # fixed on dev in: https://github.com/Vector35/binaryninja-api/commit/c18b89e4cabfc28081a7893ccd4cf8956c9a797f
+            signature = "".join(chr(x) for x in signature)
             ptr = self.find_next_data(ptr, signature)
             if not ptr:
                 break
