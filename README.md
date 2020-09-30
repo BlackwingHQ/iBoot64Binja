@@ -114,12 +114,9 @@ Binary Ninja's `get_code_refs`:
 ```
 
 ![](https://user-images.githubusercontent.com/6217759/94697288-07c57400-0306-11eb-8d38-fb821bd0b779.png)
-![](https://user-images.githubusercontent.com/6217759/94697350-1b70da80-0306-11eb-8db1-c28bc7777bca.png)
-![](https://user-images.githubusercontent.com/6217759/94697404-2af02380-0306-11eb-8bd0-581b82d73437.png)
+
 ![](https://user-images.githubusercontent.com/6217759/94697475-3cd1c680-0306-11eb-83e6-bbaadc19dfd2.png)
-![](https://user-images.githubusercontent.com/6217759/94697543-5246f080-0306-11eb-9f25-f49913897710.png)
-![](https://user-images.githubusercontent.com/6217759/94697614-638ffd00-0306-11eb-8945-a25971a1029a.png)
-![](https://user-images.githubusercontent.com/6217759/94697679-77d3fa00-0306-11eb-8431-3c1f74aca313.png)
+
 ![](https://user-images.githubusercontent.com/6217759/94697741-88847000-0306-11eb-84db-6f0bd3770137.png)
 
 Example:
