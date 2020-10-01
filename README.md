@@ -102,11 +102,6 @@ Names function with exactly `occurances` number of references to string `identif
 `XrefsTo(addr)` returns direct references to the specified address, whereas `get_code_refs(addr)` also returns indirect references (i.e. via registers).
 Therefore, xref counts will differ between IDA and Binja.
 
-IDA's `XrefsTo`:
-
-Binary Ninja's `get_code_refs`:
-
-
 Example:
 ```json
 {
