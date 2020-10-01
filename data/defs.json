@@ -100,6 +100,22 @@
                 "heuristic": "constant"
             },
             {
+                "name": "image4_load",
+                "type": "function",
+                "identifier": "0x4D650000",
+                "comment": "",
+                "heuristic": "constant"
+                
+            },
+            {
+                "name": "_Img4DecodeInit",
+                "type": "function",
+                "identifier": "0x494D0000",
+                "comment": "",
+                "heuristic": "constant"
+                
+            },
+            {
                 "name": "_loaded_kernelcache",
                 "type": "function",
                 "identifier": "_macho_load",

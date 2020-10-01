@@ -1,5 +1,4 @@
 # iBoot64Binja (v0.1.1)
-Author: **Blackwing Intelligence**
 
 _Binary View for loading iBoot, SecureROM, etc. firmware_
 

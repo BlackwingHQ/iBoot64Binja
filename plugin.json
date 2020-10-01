@@ -1,6 +1,6 @@
 {
    "pluginmetadataversion": 2,
-   "name": "iBoot64Binja",
+   "name": "iBoot64 Loader",
    "author": "Blackwing Intelligence",
    "type": [
       "binaryview"
@@ -25,5 +25,5 @@
       "Linux": "Copy to `~/.binaryninja/plugins/` or use Plugin Manager"
    },
    "version": "0.1.1",
-   "minimumbinaryninjaversion": 2122
+   "minimumbinaryninjaversion": 2263
 }
