@@ -155,25 +155,24 @@ class iBoot64View(BinaryView):
 
     def on_complete(self, blah):
         print("[+] Analysis complete. Finding interesting functions...")
-
         self.find_interesting()
 
     def resolve_string_refs(self, defs):
         stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "stringref"]
         for sym in stringrefs:
-            if self.define_func_from_stringref(sym['identifier'], sym['fname']) == None:
-                print("[!] Can't find function {}".format(sym['fname']))
+            if self.define_func_from_stringref(sym['identifier'], sym['name']) == None:
+                print("[!] Can't find function {}".format(sym['name']))
 
     def resolve_n_string_refs(self, defs):
         stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "nstringrefs"]
         for sym in stringrefs:
             try:
-                occur = sym['occurances']
-                if isinstance(occur, int):
-                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['fname'], sym['occurances']) == None:
-                        print("[!] Can't find function {}".format(sym['fname']))
+                refcount = sym['refcount']
+                if isinstance(refcount, int):
+                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['name'], sym['refcount']) == None:
+                        print("[!] Can't find function {}".format(sym['name']))
             except:
-                print("[!] Bad number of occurances for symbol {}: {}".format(sym['fname'], sym['occurances']))
+                print("[!] Bad refcount for symbol {}: {}".format(sym['name'], sym['refcount']))
                 continue
 
     def resolve_byte_sig_pattern(self, identifier):
@@ -209,34 +208,43 @@ class iBoot64View(BinaryView):
 
             if result != 0:
                 break
-        return result
+        if result == 0:
+            return None
+        else:
+            return self.get_functions_containing(result)[0].lowest_address
 
     def resolve_byte_sigs(self, defs):
         bytesigs = [sym for sym in defs['symbol'] if sym['heuristic'] == "bytesig"]
         for sym in bytesigs:
             if "?" in sym['identifier']:
                 addr = self.resolve_byte_sig_pattern(sym['identifier'])
-                if addr != 0:
-                    self.define_function_at_address(addr, sym['fname'])
+                if addr:
+                    self.define_function_at_address(addr, sym['name'])
                 else:
-                    print("[!] Can't find function {}".format(sym['fname']))
+                    print("[!] Can't find function {}".format(sym['name']))
             else:
                 try:
                     signature = binascii.unhexlify(sym['identifier'])
                 except binascii.Error:
-                    print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['fname'], sym['identifier']))
+                    print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['name'], sym['identifier']))
                     return
-                if self.define_func_from_bytesignature(signature, sym['fname']) == None:
-                    print("[!] Can't find function {}".format(sym['fname']))
+                if self.define_func_from_bytesignature(signature, sym['name']) == None:
+                    print("[!] Can't find function {}".format(sym['name']))
 
     def resolve_constants(self, defs):
         constants = [sym for sym in defs['symbol'] if sym['heuristic'] == "constant"]
         for sym in constants:
             const = self.convert_const(sym['identifier'])
             if const == None:
-                print("[!] Bad constant definition for symbol {}: {}".format(sym['fname'], sym['identifier']))
-            elif self.define_func_from_constant(const, sym['fname']) == None:
-                print("[!] Can't find function {}".format(sym['fname']))
+                print("[!] Bad constant definition for symbol {}: {}".format(sym['name'], sym['identifier']))
+            elif self.define_func_from_constant(const, sym['name']) == None:
+                print("[!] Can't find function {}".format(sym['name']))
+
+    def resolve_xrefs_to(self, defs):
+        xrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "xrefsto"]
+        for sym in xrefs:
+            if self.define_func_from_xref_to(sym['identifier'], sym['name']) == None:
+                print("[!] Can't find function {}".format(sym['name']))
 
 
     def convert_const(self, const):
@@ -268,11 +276,14 @@ class iBoot64View(BinaryView):
 
         self.resolve_n_string_refs(defs)
 
+        self.resolve_xrefs_to(defs)
+
+
     def find_reset(self, data):
         i = 0
-        end = data.find_next_data(0, b'iBoot for')
+        end = data.find_next_data(0, 'iBoot for')
         if end is None:
-            end = data.find_next_data(0, b'SecureROM for')
+            end = data.find_next_data(0, 'SecureROM for')
             if end is None:
                 return None
         while i < end:
@@ -289,31 +300,33 @@ class iBoot64View(BinaryView):
                 continue
         return None
 
-    def find_panic(self):
-        ptr = self.start
-        while ptr < self.end:
-            ptr = self.find_next_data(ptr, b'double panic in ')
+    # def find_panic(self):
+    #     ptr = self.start
+    #     while ptr < self.end:
+    #         ptr = self.find_next_data(ptr, b'double panic in ')
 
-            refs = self.get_code_refs(ptr)
-            if refs:
-                for i in refs:
-                    func_start = i.function.lowest_address
-                    # self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
-                    self.define_user_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
-                    # TODO: Improve - Currently breaks on first ref
-                    return func_start
-            else:
-                ptr = ptr + 1
-        # Not sure the Binja idiomatic thing to return
-        # return -1
-        return None
+    #         refs = self.get_code_refs(ptr)
+    #         if refs:
+    #             for i in refs:
+    #                 func_start = i.function.lowest_address
+    #                 # self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
+    #                 self.define_user_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
+    #                 # TODO: Improve - Currently breaks on first ref
+    #                 return func_start
+    #         else:
+    #             ptr = ptr + 1
+    #     # Not sure the Binja idiomatic thing to return
+    #     # return -1
+    #     return None
 
     def define_func_from_stringref(self, needle, func_name):
         ptr = self.start
         while ptr < self.end:
             # using bv.find_next_data instead of bv.find_next_text here because it seems to be _way_ faster
             # ptr = self.find_next_text(ptr, needle)
-            ptr = self.find_next_data(ptr, bytes(needle.encode("utf-8")))
+            # ptr = self.find_next_data(ptr, bytes(needle.encode("utf-8")))
+            ptr = self.find_next_data(ptr, needle)
+
             if not ptr:
                 break
             refs = self.get_code_refs(ptr)
@@ -327,17 +340,17 @@ class iBoot64View(BinaryView):
                 ptr = ptr + 1
         return None
 
-    def define_func_from_n_stringrefs(self, needle, func_name, occurs):
+    def define_func_from_n_stringrefs(self, needle, func_name, refcount):
         ptr = self.start
         while ptr < self.end:
             refs = []
-            ptr = self.find_next_data(ptr, bytes(needle.encode("utf-8")))
+            ptr = self.find_next_data(ptr, needle)
             if not ptr:
                 break
             for ref in self.get_code_refs(ptr):
                 refs.append(ref.function.lowest_address)
             for func_start in refs:
-                if refs.count(func_start) == occurs:
+                if refs.count(func_start) == refcount:
                     self.define_function_at_address(func_start, func_name)
                     return func_start
             ptr = ptr + 1
@@ -347,6 +360,9 @@ class iBoot64View(BinaryView):
     def define_func_from_bytesignature(self, signature, func_name):
         ptr = self.start
         while ptr < self.end:
+            # Have to convert signature byearray to a string since find_next_data can't handle bytes on stable
+            # fixed on dev in: https://github.com/Vector35/binaryninja-api/commit/c18b89e4cabfc28081a7893ccd4cf8956c9a797f
+            signature = "".join(chr(x) for x in signature)
             ptr = self.find_next_data(ptr, signature)
             if not ptr:
                 break
@@ -364,6 +380,22 @@ class iBoot64View(BinaryView):
             if not ptr:
                 break
             func_start = self.get_functions_containing(ptr)[0].lowest_address
+            self.define_function_at_address(func_start, func_name)
+            return func_start
+        return None
+
+    def define_func_from_xref_to(self, ref, func_name):
+        ptr = self.start
+        while ptr < self.end:
+            syms = self.get_symbols_by_name(ref)
+            if len(syms) != 1:
+                return None
+            if syms[0].type != SymbolType.FunctionSymbol:
+                return None
+            ptr = syms[0].address
+            if not ptr:
+                break
+            func_start = self.get_code_refs(ptr)[0].function.start
             self.define_function_at_address(func_start, func_name)
             return func_start
         return None
