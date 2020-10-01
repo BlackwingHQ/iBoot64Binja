@@ -156,4 +156,18 @@ Binary Ninja's `get_code_refs` (same binary):
 ![](https://user-images.githubusercontent.com/6217759/94697741-88847000-0306-11eb-84db-6f0bd3770137.png)
 
 
+### Cross References To (`xrefsto`)
 
+Names function that calls `identifier` as `name`.
+**Note:** Since `name` must already be defined, the order of definitions in defs.json is currently important.
+
+Example:
+```json
+ {
+    "name": "_loaded_kernelcache",
+    "type": "function",
+    "identifier": "_macho_load",
+    "comment": "",
+    "heuristic": "xrefsto"
+}
+```
