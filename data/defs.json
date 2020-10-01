@@ -115,13 +115,6 @@
                 "heuristic": "constant"
             },
             {
-                "name": "_boot_check_panic",
-                "type": "function",
-                "identifier": "1F ? 03 71",
-                "comment": "",
-                "heuristic": "bytesig"
-            },
-            {
                 "name": "_loaded_kernelcache",
                 "type": "function",
                 "identifier": "_macho_load",
