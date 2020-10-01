@@ -67,8 +67,8 @@
             {
                 "name": "_usb_dfu_init",
                 "type": "function",
-                "identifier": "E0031532020080D2",
-                "comment": "",
+                "identifier": "E1 03 40 F9 ? ? ? ? 02 00 80 D2 ? ? ? 94",
+                "comment": "E0031532020080D2",
                 "heuristic": "bytesig"
             },
             {
@@ -105,7 +105,7 @@
                 "identifier": "0x4D650000",
                 "comment": "",
                 "heuristic": "constant"
-                
+
             },
             {
                 "name": "_Img4DecodeInit",
@@ -113,7 +113,13 @@
                 "identifier": "0x494D0000",
                 "comment": "",
                 "heuristic": "constant"
-                
+            },
+            {
+                "name": "_boot_check_panic",
+                "type": "function",
+                "identifier": "1F ? 03 71",
+                "comment": "",
+                "heuristic": "bytesig"
             },
             {
                 "name": "_loaded_kernelcache",
