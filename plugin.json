@@ -9,7 +9,7 @@
       "python3"
    ],
    "description": "Binary View for loading iBoot, SecureROM, etc. firmware",
-   "longdescription": "iBoot64Binja is a Binary View plugin that aids in reverse engineering iBoot related firmware. It will identify and load the binary at the intended load address for accurate analysis. Additionally, it finds and names several functions based on various heuristics. It's heavily inspired by argp's iBoot64Helper IDA loader.",
+   "longdescription": "# iBoot64Binja (v1.0.1)\n\n_Binary View for loading iBoot, SecureROM, etc. firmware_\n\n![](https://user-images.githubusercontent.com/6217759/94852197-83531e00-03f7-11eb-95c7-0f0f500fb004.png)\n\n## Description \nBinary Ninja Binary View plugin for analyzing iBoot, SecureROM, etc. heavily inspired by [argp's iBoot64helper IDA loader](https://github.com/argp/iBoot64helper).    \n- Identifies iBoot / SecureROM firmwares    \n- Finds target load address and performs rebase for accurate analysis    \n- Restores some interesting symbols based on various heuristics\n\n## Installation Instructions\n\n### Darwin\n\nCopy to `~/Library/Application Support/Binary Ninja/plugins/` or use Plugin Manager\n\n### Windows\n\nCopy to `%APPDATA%\\Binary Ninja\\plugins` or use Plugin Manager\n\n### Linux\n\nCopy to `~/.binaryninja/plugins/` or use Plugin Manager\n\n## Minimum Version\n\nThis plugin has been tested with the following minimum version of Binary Ninja:\n\n* 2.1.2263\n\n## Documentation\n\nDocumentation on current heuristics, etc. is [here](docs/docs.md).\n\n## License\n\nThis plugin is released under a MIT license.\n\n## Acknowledgments\n\n- Argp's [iBoot64Helper](https://github.com/argp/iBoot64helper) iBoot loader for IDA Pro inspired the initial development of this plugin\n- [binja_sigmaker](https://github.com/apekros/binja_sigmaker) inspired the current wildcard signature matching for the `bytesig` heuristic",
    "license": {
       "name": "MIT",
       "text": "Copyright 2020 Blackwing Intelligence\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
@@ -24,6 +24,6 @@
       "Windows": "Copy to `%APPDATA%\\Binary Ninja\\plugins` or use Plugin Manager",
       "Linux": "Copy to `~/.binaryninja/plugins/` or use Plugin Manager"
    },
-   "version": "1.0",
+   "version": "1.0.1",
    "minimumbinaryninjaversion": 2170
 }
