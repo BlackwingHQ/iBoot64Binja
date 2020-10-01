@@ -2,6 +2,7 @@
 
 _Binary View for loading iBoot, SecureROM, etc. firmware_
 
+![](https://user-images.githubusercontent.com/6217759/94852197-83531e00-03f7-11eb-95c7-0f0f500fb004.png)
 
 ## Description 
 Binary Ninja Binary View plugin for analyzing iBoot, SecureROM, etc. heavily inspired by @argp's iBoot64helper IDA loader (https://github.com/argp/iBoot64helper).	
