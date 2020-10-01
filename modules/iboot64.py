@@ -204,7 +204,11 @@ class iBoot64View(BinaryView):
                     result = br.offset
                     break
 
-                br.offset += self.get_instruction_length(br.offset)
+                instruction_length = self.get_instruction_length(br.offset)
+                #account for unknown or bad instruction
+                if instruction_length == 0:
+                    break
+                br.offset += instruction_length
 
             if result != 0:
                 break
