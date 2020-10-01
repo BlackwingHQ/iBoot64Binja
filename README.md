@@ -64,7 +64,7 @@ Names first function containing signature defined in `identifier` (hex encoded s
 
    - A hex encoded sequence of bytes enclosed in quotation marks (i.e. "deadbeef" or "DEADBEEF")
    - A sequence of hex bytes, with wildcard `?` placeholders (i.e. "E1 03 40 F9 ? ? ? ? 02 00 80 D2 ? ? ? 94")
-   **CAUTION:** This notation is experimental and _slow_, use sparingly.
+      **CAUTION:** This notation is experimental and _slow_, use sparingly.
 
 Example:
 ```json
@@ -159,6 +159,7 @@ Binary Ninja's `get_code_refs` (same binary):
 ### Cross References To (`xrefsto`)
 
 Names function that calls `identifier` as `name`.
+
 **Note:** Since `name` must already be defined, the order of definitions in defs.json is currently important.
 
 Example:
