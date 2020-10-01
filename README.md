@@ -1,4 +1,4 @@
-# iBoot64Binja (v0.1.1)
+# iBoot64Binja (v0.1.0)
 
 _Binary View for loading iBoot, SecureROM, etc. firmware_
 
