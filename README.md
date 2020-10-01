@@ -60,7 +60,11 @@ Example:
 
 ### Byte Signature (`bytesig`)
 Names first function containing signature defined in `identifier` (hex encoded sequence of bytes) as `name`.
-**Note:** `identifier` _must_ be a hex encoded sequence of bytes enclosed in quotation marks.
+**Note:** `identifier` can be:
+
+   - A hex encoded sequence of bytes enclosed in quotation marks (i.e. "deadbeef" or "DEADBEEF")
+   - A sequence of hex bytes, with wildcard `?` placeholders (i.e. "E1 03 40 F9 ? ? ? ? 02 00 80 D2 ? ? ? 94")
+   **CAUTION:** This notation is experimental and _slow_, use sparingly.
 
 Example:
 ```json
