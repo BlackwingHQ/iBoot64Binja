@@ -19,11 +19,11 @@
 # IN THE SOFTWARE.
 
 from binaryninja.architecture import Architecture
-from binaryninja.binaryview import BinaryView, BinaryReader, AnalysisCompletionEvent
+from binaryninja.binaryview import BinaryView, BinaryReader, BinaryWriter, AnalysisCompletionEvent
 from binaryninja.enums import SymbolType, SegmentFlag, MessageBoxButtonSet, MessageBoxIcon
 from binaryninja.interaction import show_message_box
 from binaryninja.types import Symbol
-from binaryninja import Settings
+from binaryninja import Settings, Endianness, log_info, log_error
 import binascii
 import json
 import os
@@ -37,8 +37,11 @@ class iBoot64View(BinaryView):
     name = "iBoot64Binja"
     long_name = "iBoot64 View"
     load_address = 0x0
+    PROLOGUES = [b"\xBD\xA9", b"\xBF\xA9"]
 
     def __init__(self, data):
+        self.reader = BinaryReader(data, Endianness.LittleEndian)
+        self.writer = BinaryWriter(data, Endianness.LittleEndian)
         BinaryView.__init__(self, parent_view=data, file_metadata=data.file)
         self.data = data
 
@@ -46,6 +49,10 @@ class iBoot64View(BinaryView):
         self.raw = self.data
         self.add_analysis_completion_event(self.on_complete)
         try:
+            self.isSecureROM = self.raw.read(0x200, 9) == b"SecureROM"
+
+            self.log(f"Loading {'SecureROM' if self.isSecureROM else 'iBoot'}")
+
             load_settings = self.get_load_settings(self.name)
             if load_settings is None:
                 print("Load Settings is None")
@@ -67,7 +74,7 @@ class iBoot64View(BinaryView):
                 # self.platform = Architecture['aarch64'].standalone_platform
                 self.load_address = int(load_settings.get_string("loader.imageBase", self))
 
-            self.add_auto_segment(self.load_address, len(self.parent_view), 0, len(self.parent_view),
+            self.add_auto_segment(self.load_address, self.parent_view.length, 0, self.parent_view.length,
                                   SegmentFlag.SegmentReadable | SegmentFlag.SegmentExecutable)
             self.add_entry_point(self.load_address)
             self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, self.load_address, '_start'))
@@ -78,23 +85,25 @@ class iBoot64View(BinaryView):
         except:
             print(traceback.format_exc())
             return False
+        
+    def log(self, msg, error=False):
+        msg = f"[iBoot-Loader] {msg}"
+        if not error:
+            log_info(msg)
+        else:
+            log_error(msg)
+
 
     @classmethod
     def is_valid_for_data(self, data):
         try:
             iBootVersionOffset = 0x280
-            iboot_version = data.get_ascii_string_at(iBootVersionOffset).value
-            if iboot_version.startswith("iBoot"):
-                # Save version to global for future ref?
-                # choice = show_message_box(
-                #     "iBoot64Binja Loader",
-                #     "This appears to be an iBoot binary - Load iBoot64Binja?",
-                #     MessageBoxButtonSet.YesNoCancelButtonSet,
-                #     MessageBoxIcon.InformationIcon)
-                # if choice == 1:
-                #     return True
-                # else:
-                #     return False
+            if (
+                data.read(iBootVersionOffset, 5) == b'iBoot'
+                or data.read(iBootVersionOffset, 4) == (b'iBEC' or b'iBSS')
+                or data.read(iBootVersionOffset, 9) == b'SecureROM'
+                or data.read(iBootVersionOffset, 9) == b'AVPBooter'
+            ):
                 return True
             return False
         except AttributeError:
@@ -158,13 +167,13 @@ class iBoot64View(BinaryView):
         self.find_interesting()
 
     def resolve_string_refs(self, defs):
-        stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "stringref"]
+        stringrefs = list([sym for sym in defs['symbol'] if sym['heuristic'] == "stringref"])
         for sym in stringrefs:
             if self.define_func_from_stringref(sym['identifier'], sym['name']) == None:
                 print("[!] Can't find function {}".format(sym['name']))
 
     def resolve_n_string_refs(self, defs):
-        stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "nstringrefs"]
+        stringrefs = list([sym for sym in defs['symbol'] if sym['heuristic'] == "nstringrefs"])
         for sym in stringrefs:
             try:
                 refcount = sym['refcount']
@@ -284,46 +293,22 @@ class iBoot64View(BinaryView):
 
 
     def find_reset(self, data):
-        i = 0
-        end = data.find_next_data(0, 'iBoot for')
-        if end is None:
-            end = data.find_next_data(0, 'SecureROM for')
-            if end is None:
-                return None
-        while i < end:
-            # Have to hand disassemble bytes since analysis hasn't yet been performed.
-            instr, width = self.arch.get_instruction_text(data[i:], 0)
-            try:
-                if instr[0].text == 'ldr':
-                    # Add current address to ldr argument for offset
-                    offset = instr[4].value + i
-                    return struct.unpack("Q", data[offset:offset + 8])[0]
-                i += width
-            except TypeError:
-                i += 1
-                continue
-        return None
+        self.base = None
+        for addr in range(0, 0x200, 4):
+            inst = self.raw.get_disassembly(addr, Architecture['aarch64'])
+            if "ldr" in inst:
+                self.reader.seek(int(inst.split(" ")[-1], 16))
+                self.base = self.reader.read64()
+                return self.base
 
-    # def find_panic(self):
-    #     ptr = self.start
-    #     while ptr < self.end:
-    #         ptr = self.find_next_data(ptr, b'double panic in ')
-
-    #         refs = self.get_code_refs(ptr)
-    #         if refs:
-    #             for i in refs:
-    #                 func_start = i.function.lowest_address
-    #                 # self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
-    #                 self.define_user_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
-    #                 # TODO: Improve - Currently breaks on first ref
-    #                 return func_start
-    #         else:
-    #             ptr = ptr + 1
-    #     # Not sure the Binja idiomatic thing to return
-    #     # return -1
-    #     return None
+        if self.base == None:
+            self.log("Failed to find entry point", error=True)
+            return False
 
     def define_func_from_stringref(self, needle, func_name):
+        if isinstance(needle, str):
+            needle = bytes(needle, 'utf8')
+        
         ptr = self.start
         while ptr < self.end:
             # using bv.find_next_data instead of bv.find_next_text here because it seems to be _way_ faster
@@ -333,7 +318,7 @@ class iBoot64View(BinaryView):
 
             if not ptr:
                 break
-            refs = self.get_code_refs(ptr)
+            refs = list(self.get_code_refs(ptr))
             if refs:
                 func_start = refs[0].function.lowest_address
                 self.define_function_at_address(func_start, func_name)
@@ -351,7 +336,7 @@ class iBoot64View(BinaryView):
             ptr = self.find_next_data(ptr, needle)
             if not ptr:
                 break
-            for ref in self.get_code_refs(ptr):
+            for ref in list(self.get_code_refs(ptr)):
                 refs.append(ref.function.lowest_address)
             for func_start in refs:
                 if refs.count(func_start) == refcount:
