@@ -8,6 +8,12 @@
             "heuristic": "stringref"
         },
         {
+            "name": "_firebloom_panic",
+            "heuristic": "stringref",
+            "type": "function",
+            "identifier": "__firebloom_panic"
+        },
+        {
             "name": "_platform_get_usb_serial_number_string",
             "type": "function",
             "identifier": "CPID:",

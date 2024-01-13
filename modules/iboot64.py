@@ -22,13 +22,31 @@ from binaryninja.architecture import Architecture
 from binaryninja.binaryview import BinaryView, BinaryReader, BinaryWriter, AnalysisCompletionEvent
 from binaryninja.enums import SymbolType, SegmentFlag, MessageBoxButtonSet, MessageBoxIcon
 from binaryninja.interaction import show_message_box
-from binaryninja.types import Symbol
+from binaryninja.types import Symbol, Type
 from binaryninja import Settings, Endianness, log_info, log_error
+from binaryninja.typeparser import TypeParser
+from binaryninja.settings import Settings, SettingsScope
 import binascii
 import json
 import os
 import struct
 import traceback
+import urllib.request
+import ssl
+
+
+CUR_FILE_PATH = os.path.dirname(os.path.abspath(__file__))
+IBOOT_H_PATH = os.path.join(CUR_FILE_PATH, '..', 'data', 'iboot.h')
+
+def load_iboot_header():
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    with urllib.request.urlopen("https://raw.githubusercontent.com/hack-different/symbol-server/main/shared/iboot.h", context=ctx) as u,             open(IBOOT_H_PATH, 'wb') as f:
+        f.write(u.read())
+
+load_iboot_header()
 
 
 use_default_loader_settings = True
@@ -44,8 +62,15 @@ class iBoot64View(BinaryView):
         self.writer = BinaryWriter(data, Endianness.LittleEndian)
         BinaryView.__init__(self, parent_view=data, file_metadata=data.file)
         self.data = data
+        self.parser = TypeParser['ClangTypeParser']
+        self.settings = Settings()
 
     def init(self):
+        self.set_analysis_hold(True)
+
+        self.settings.set_integer('analysis.hlil.maxIntermediateConditionComplexity', 4048586, self, SettingsScope.SettingsResourceScope)
+        self.settings.set_bool('analysis.linearSweep.permissive', True, self, SettingsScope.SettingsResourceScope)
+
         self.raw = self.data
         self.add_analysis_completion_event(self.on_complete)
         try:
@@ -78,8 +103,9 @@ class iBoot64View(BinaryView):
                                   SegmentFlag.SegmentReadable | SegmentFlag.SegmentExecutable)
             self.add_entry_point(self.load_address)
             self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, self.load_address, '_start'))
+
+            self.set_analysis_hold(False)
             self.update_analysis()
-            # self.find_interesting()
 
             return True
         except:
@@ -291,6 +317,25 @@ class iBoot64View(BinaryView):
 
         self.resolve_xrefs_to(defs)
 
+        self.resolve_special_instructions()
+
+        if os.path.exists(IBOOT_H_PATH):
+            self.log("Adding iBoot Header")
+            with open(IBOOT_H_PATH) as iboot_h:
+                (type_result, errors) = self.parser.parse_types_from_source(iboot_h.read(), "iboot.h", self.platform)
+                if type_result:
+                    for type in type_result.types:
+                        self.define_type(Type.generate_auto_type_id("iboot.h", type.name), type.name, type.type)
+
+
+    def resolve_special_instructions(self):
+        self.log("Resolving `hint` instructions")
+        ptr = self.start
+        while ptr is not None and ptr < self.end:
+            ptr = self.find_next_text(ptr, 'hint    #0x45')
+            if isinstance(ptr, int):
+                self.set_comment_at(ptr, 'hint 0x45 would enable the debugger on simulated hardware')
+                ptr += self.arch.address_size
 
     def find_reset(self, data):
         self.base = None
