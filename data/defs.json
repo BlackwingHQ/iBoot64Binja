@@ -1,136 +1,245 @@
 {
-        "symbol": [
-            {
-                "name": "_panic",
-                "type": "function",
-                "identifier": "double panic in ",
-                "comment": "",
-                "heuristic": "stringref"
-            },
-            {
-                "name": "_aes_crypto_cmd",
-                "type": "function",
-                "identifier": "aes_crypto_cmd",
-                "comment": "",
-                "heuristic": "stringref"
-            },
-            {
-                "name": "_main_task",
-                "type": "function",
-                "identifier": "debug-uarts",
-                "comment": "",
-                "heuristic": "stringref"
-            },
-            {
-                "name": "_UpdateDeviceTree",
-                "type": "function",
-                "identifier": "development-cert",
-                "comment": "",
-                "heuristic": "stringref"
-            },
-            {
-                "name": "_pmgr_binning_mode_get_value",
-                "type": "function",
-                "identifier": "Invalid low",
-                "comment": "",
-                "heuristic": "stringref"
-            },
-            {
-                "name": "_do_printf",
-                "type": "function",
-                "identifier": "<ptr>",
-                "comment": "",
-                "heuristic": "stringref"
-            },
-            {
-                "name": "_do_go",
-                "type": "function",
-                "identifier": "Memory image not valid",
-                "comment": "",
-                "heuristic": "stringref"
-            },
-            {
-                "name": "_image4_get_partial",
-                "type": "function",
-                "identifier": "IMG4",
-                "comment": "",
-                "heuristic": "stringref"
-            },
-            {
-                "name": "_macho_load",
-                "type": "function",
-                "identifier": "__PAGEZERO",
-                "refcount": 5,
-                "comment": "",
-                "heuristic": "nstringrefs"
-            },
-            {
-                "name": "_usb_dfu_init",
-                "type": "function",
-                "identifier": "E1 03 40 F9 ? ? ? ? 02 00 80 D2 ? ? ? 94",
-                "comment": "E0031532020080D2",
-                "heuristic": "bytesig"
-            },
-            {
-                "name": "_usb_init_with_controller",
-                "type": "function",
-                "identifier": "_usb_dfu_init",
-                "comment": "",
-                "heuristic": "xrefsto"
-            },
-            {
-                "name": "_usb_init",
-                "type": "function",
-                "identifier": "_usb_init_with_controller",
-                "comment": "",
-                "heuristic": "xrefsto"
-            },
-            {
-                "name": "_platform_debug_init",
-                "type": "function",
-                "identifier": "_usb_init",
-                "comment": "",
-                "heuristic": "xrefsto"
-            },
-            {
-                "name": "_macho_valid",
-                "type": "function",
-                "identifier": "0xFEEDFACF",
-                "comment": "",
-                "heuristic": "constant"
-            },
-            {
-                "name": "image4_load",
-                "type": "function",
-                "identifier": "0x4D650000",
-                "comment": "",
-                "heuristic": "constant"
-
-            },
-            {
-                "name": "_Img4DecodeInit",
-                "type": "function",
-                "identifier": "0x494D0000",
-                "comment": "",
-                "heuristic": "constant"
-            },
-            {
-                "name": "_loaded_kernelcache",
-                "type": "function",
-                "identifier": "_macho_load",
-                "comment": "",
-                "heuristic": "xrefsto"
-            },
-            {
-                "name": "_load_kernelcache",
-                "type": "function",
-                "identifier": "_loaded_kernelcache",
-                "comment": "",
-                "heuristic": "xrefsto"
-            }
-        ]
+    "symbol": [
+        {
+            "name": "_panic",
+            "type": "function",
+            "identifier": "double panic in ",
+            "comment": "",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_firebloom_panic",
+            "heuristic": "stringref",
+            "type": "function",
+            "identifier": "__firebloom_panic"
+        },
+        {
+            "name": "_platform_get_usb_serial_number_string",
+            "type": "function",
+            "identifier": "CPID:",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_platform_get_usb_more_other_string",
+            "type": "function",
+            "identifier": " NONC:",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_aes_crypto_cmd",
+            "type": "function",
+            "identifier": "aes_crypto_cmd",
+            "comment": "",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_main_task",
+            "type": "function",
+            "identifier": "debug-uarts",
+            "comment": "",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_platform_init_display",
+            "type": "function",
+            "identifier": "backlight-level",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_do_memboot",
+            "type": "function",
+            "identifier": "Combo image too large\n",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_task_init",
+            "type": "function",
+            "identifier": "idle task",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_UpdateDeviceTree",
+            "type": "function",
+            "identifier": "development-cert",
+            "comment": "",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_pmgr_binning_mode_get_value",
+            "type": "function",
+            "identifier": "Invalid low",
+            "comment": "",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_do_printf",
+            "type": "function",
+            "identifier": "<ptr>",
+            "comment": "",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_do_go",
+            "type": "function",
+            "identifier": "Memory image not valid",
+            "comment": "",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_image4_get_partial",
+            "type": "function",
+            "identifier": "IMG4",
+            "comment": "",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_macho_load",
+            "type": "function",
+            "identifier": "__PAGEZERO",
+            "refcount": 5,
+            "comment": "",
+            "heuristic": "nstringrefs"
+        },
+        {
+            "name": "_usb_dfu_init",
+            "type": "function",
+            "identifier": "E1 03 40 F9 ? ? ? ? 02 00 80 D2 ? ? ? 94",
+            "comment": "E0031532020080D2",
+            "heuristic": "bytesig"
+        },
+        {
+            "name": "_usb_init_with_controller",
+            "type": "function",
+            "identifier": "_usb_dfu_init",
+            "comment": "",
+            "heuristic": "xrefsto"
+        },
+        {
+            "name": "_usb_init",
+            "type": "function",
+            "identifier": "_usb_init_with_controller",
+            "comment": "",
+            "heuristic": "xrefsto"
+        },
+        {
+            "name": "_platform_debug_init",
+            "type": "function",
+            "identifier": "_usb_init",
+            "comment": "",
+            "heuristic": "xrefsto"
+        },
+        {
+            "name": "_sys_setup_default_environment",
+            "type": "function",
+            "identifier": "/System/Library/Caches/com.apple.kernelcaches/kernelcache",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_do_setpict",
+            "type": "function",
+            "identifier": "picture too large, size:%zu\n",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_arm_exception_abort",
+            "type": "function",
+            "identifier": "ARM %s abort at 0x%016llx:",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_check_autoboot",
+            "type": "function",
+            "identifier": "aborting autoboot due to user intervention.\n",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_macho_valid",
+            "type": "function",
+            "identifier": "0xFEEDFACF",
+            "comment": "",
+            "heuristic": "constant"
+        },
+        {
+            "name": "image4_load",
+            "type": "function",
+            "identifier": "0x4D650000",
+            "comment": "",
+            "heuristic": "constant"
+        },
+        {
+            "name": "_Img4DecodeInit",
+            "type": "function",
+            "identifier": "0x494D0000",
+            "comment": "",
+            "heuristic": "constant"
+        },
+        {
+            "name": "_loaded_kernelcache",
+            "type": "function",
+            "identifier": "_macho_load",
+            "comment": "",
+            "heuristic": "xrefsto"
+        },
+        {
+            "name": "_load_kernelcache",
+            "type": "function",
+            "identifier": "_loaded_kernelcache",
+            "comment": "",
+            "heuristic": "xrefsto"
+        },
+        {
+            "name": "_do_devicetree",
+            "type": "function",
+            "identifier": "Device Tree image not valid\n",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_do_ramdisk",
+            "type": "function",
+            "identifier": "Ramdisk image not valid\n",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_usb_serial_init",
+            "type": "function",
+            "identifier": "Apple USB Serial Interface",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_image4_dump_list",
+            "type": "function",
+            "heuristic": "stringref",
+            "identifier": "image %p: bdev %p type %c%c%c%c offset 0x%llx"
+        },
+        {
+            "name": "_prepare_and_jump",
+            "type": "function",
+            "heuristic": "stringref",
+            "identifier": "======== End of %s serial output. ========\n"
+        },
+        {
+            "name": "_boot_upgrade_system",
+            "type": "function",
+            "identifier": "/boot/kernelcache",
+            "heuristic": "stringref"
+        },
+        {
+            "name": "_plaform_early_init",
+            "type": "function",
+            "heuristic": "constant",
+            "identifier": "0x60024039"
+        },
+        {
+            "name": "_platform_get_usb_vendor_id",
+            "type": "function",
+            "heuristic": "constant",
+            "identifier": "0x80B58052"
+        },
+        {
+            "name": "_usb_core_init",
+            "type": "function",
+            "heuristic": "xrefsto",
+            "identifier": "_platform_get_usb_vendor_id"
+        }
+    ]
 }
-
-
-
-

@@ -18,34 +18,75 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+from io import open
+
 from binaryninja.architecture import Architecture
-from binaryninja.binaryview import BinaryView, BinaryReader, AnalysisCompletionEvent
-from binaryninja.enums import SymbolType, SegmentFlag, MessageBoxButtonSet, MessageBoxIcon
-from binaryninja.interaction import show_message_box
-from binaryninja.types import Symbol
-from binaryninja import Settings
+from binaryninja.binaryview import BinaryView, BinaryReader, BinaryWriter
+from binaryninja.enums import SymbolType, SegmentFlag
+from binaryninja.types import Symbol, Type
+from binaryninja import Endianness, log_info, log_error
+from binaryninja.typeparser import TypeParser
+from binaryninja.settings import Settings, SettingsScope
 import binascii
 import json
 import os
 import struct
 import traceback
+import urllib.request
+import ssl
+import yaml
 
+CUR_FILE_PATH = os.path.dirname(os.path.abspath(__file__))
+IBOOT_H_PATH = os.path.join(CUR_FILE_PATH, '..', 'data', 'iboot.h')
+REGISTERS_PATH = os.path.join(CUR_FILE_PATH, '..', 'data', 'registers.yaml')
+DEFS_JSON = os.path.join(CUR_FILE_PATH, '..', 'data', 'defs.json')
+
+
+def load_datafile(url, file_path):
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    with urllib.request.urlopen(url, context=ctx) as u, open(file_path, 'wb') as f:
+        f.write(u.read())
+
+
+load_datafile("https://raw.githubusercontent.com/hack-different/symbol-server/main/shared/iboot.h", IBOOT_H_PATH)
+load_datafile("https://raw.githubusercontent.com/hack-different/apple-knowledge/main/_data/registers.yaml",
+              REGISTERS_PATH)
 
 use_default_loader_settings = True
 
+
 class iBoot64View(BinaryView):
-    name = "iBoot64Binja"
-    long_name = "iBoot64 View"
+    name: str = "iBoot64Binja"
+    long_name: str = "iBoot64 View"
     load_address = 0x0
+    PROLOGUES = [b"\xBD\xA9", b"\xBF\xA9"]
 
     def __init__(self, data):
+        self.reader = BinaryReader(data, Endianness.LittleEndian)
+        self.writer = BinaryWriter(data, Endianness.LittleEndian)
         BinaryView.__init__(self, parent_view=data, file_metadata=data.file)
         self.data = data
+        self.parser = TypeParser['ClangTypeParser']
+        self.settings = Settings()
+        self.registers = {}
 
     def init(self):
+        self.set_analysis_hold(True)
+
+        self.settings.set_integer('analysis.hlil.maxIntermediateConditionComplexity', 4048586, self,
+                                  SettingsScope.SettingsResourceScope)
+        self.settings.set_bool('analysis.linearSweep.permissive', True, self, SettingsScope.SettingsResourceScope)
+
         self.raw = self.data
         self.add_analysis_completion_event(self.on_complete)
         try:
+            self.isSecureROM = self.raw.read(0x200, 9) == b"SecureROM"
+
+            self.log(f"Loading {'SecureROM' if self.isSecureROM else 'iBoot'}")
+
             load_settings = self.get_load_settings(self.name)
             if load_settings is None:
                 print("Load Settings is None")
@@ -67,44 +108,46 @@ class iBoot64View(BinaryView):
                 # self.platform = Architecture['aarch64'].standalone_platform
                 self.load_address = int(load_settings.get_string("loader.imageBase", self))
 
-            self.add_auto_segment(self.load_address, len(self.parent_view), 0, len(self.parent_view),
+            self.add_auto_segment(self.load_address, self.parent_view.length, 0, self.parent_view.length,
                                   SegmentFlag.SegmentReadable | SegmentFlag.SegmentExecutable)
             self.add_entry_point(self.load_address)
             self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, self.load_address, '_start'))
+
+            self.set_analysis_hold(False)
             self.update_analysis()
-            # self.find_interesting()
 
             return True
         except:
             print(traceback.format_exc())
             return False
 
+    def log(self, msg, error=False):
+        msg = f"[iBoot-Loader] {msg}"
+        if not error:
+            log_info(msg)
+        else:
+            log_error(msg)
+
     @classmethod
-    def is_valid_for_data(self, data):
+    def is_valid_for_data(cls, data):
         try:
-            iBootVersionOffset = 0x280
-            iboot_version = data.get_ascii_string_at(iBootVersionOffset).value
-            if iboot_version.startswith("iBoot"):
-                # Save version to global for future ref?
-                # choice = show_message_box(
-                #     "iBoot64Binja Loader",
-                #     "This appears to be an iBoot binary - Load iBoot64Binja?",
-                #     MessageBoxButtonSet.YesNoCancelButtonSet,
-                #     MessageBoxIcon.InformationIcon)
-                # if choice == 1:
-                #     return True
-                # else:
-                #     return False
+            version_offset = 0x280
+            if (
+                    data.read(version_offset, 5) == b'iBoot'
+                    or data.read(version_offset, 4) == (b'iBEC' or b'iBSS')
+                    or data.read(version_offset, 9) == b'SecureROM'
+                    or data.read(version_offset, 9) == b'AVPBooter'
+            ):
                 return True
             return False
         except AttributeError:
             return False
 
     @classmethod
-    def get_load_settings_for_data(self, data):
+    def get_load_settings_for_data(cls, data):
         load_settings = Settings("mapped_load_settings")
         if use_default_loader_settings:
-            load_settings = self.registered_view_type.get_default_load_settings_for_data(data)
+            load_settings = cls.registered_view_type.get_default_load_settings_for_data(data)
             # specify default load settings that can be overridden (from the UI)
             overrides = ["loader.architecture", "loader.platform", "loader.entryPoint", "loader.imageBase",
                          "loader.segments", "loader.sections"]
@@ -153,23 +196,23 @@ class iBoot64View(BinaryView):
         with open(symbol_file_path, 'r') as f:
             return json.load(f)
 
-    def on_complete(self, blah):
+    def on_complete(self) -> None:
         print("[+] Analysis complete. Finding interesting functions...")
         self.find_interesting()
 
     def resolve_string_refs(self, defs):
-        stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "stringref"]
-        for sym in stringrefs:
-            if self.define_func_from_stringref(sym['identifier'], sym['name']) == None:
+        string_refs = list([sym for sym in defs['symbol'] if sym['heuristic'] == "stringref"])
+        for sym in string_refs:
+            if self.define_func_from_stringref(sym['identifier'], sym['name']) is None:
                 print("[!] Can't find function {}".format(sym['name']))
 
     def resolve_n_string_refs(self, defs):
-        stringrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "nstringrefs"]
+        stringrefs = list([sym for sym in defs['symbol'] if sym['heuristic'] == "nstringrefs"])
         for sym in stringrefs:
             try:
                 refcount = sym['refcount']
                 if isinstance(refcount, int):
-                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['name'], sym['refcount']) == None:
+                    if self.define_func_from_n_stringrefs(sym['identifier'], sym['name'], sym['refcount']) is None:
                         print("[!] Can't find function {}".format(sym['name']))
             except:
                 print("[!] Bad refcount for symbol {}: {}".format(sym['name'], sym['refcount']))
@@ -188,7 +231,8 @@ class iBoot64View(BinaryView):
         for function in self.functions:
             br.seek(function.start)
 
-            while self.get_functions_containing(br.offset + length) != None and function in self.get_functions_containing(br.offset + length):
+            while self.get_functions_containing(
+                    br.offset + length) is not None and function in self.get_functions_containing(br.offset + length):
                 found = True
                 count = 0
                 for entry in pattern:
@@ -205,7 +249,7 @@ class iBoot64View(BinaryView):
                     break
 
                 instruction_length = self.get_instruction_length(br.offset)
-                #account for unknown or bad instruction
+                # account for unknown or bad instruction
                 if instruction_length == 0:
                     break
                 br.offset += instruction_length
@@ -230,28 +274,29 @@ class iBoot64View(BinaryView):
                 try:
                     signature = binascii.unhexlify(sym['identifier'])
                 except binascii.Error:
-                    print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['name'], sym['identifier']))
+                    print("[!] Bad Signature for {}! Must be hex encoded string, got: {}.".format(sym['name'],
+                                                                                                  sym['identifier']))
                     return
-                if self.define_func_from_bytesignature(signature, sym['name']) == None:
+                if self.define_func_from_bytesignature(signature, sym['name']) is None:
                     print("[!] Can't find function {}".format(sym['name']))
 
     def resolve_constants(self, defs):
         constants = [sym for sym in defs['symbol'] if sym['heuristic'] == "constant"]
         for sym in constants:
             const = self.convert_const(sym['identifier'])
-            if const == None:
+            if const is None:
                 print("[!] Bad constant definition for symbol {}: {}".format(sym['name'], sym['identifier']))
-            elif self.define_func_from_constant(const, sym['name']) == None:
+            elif self.define_func_from_constant(const, sym['name']) is None:
                 print("[!] Can't find function {}".format(sym['name']))
 
     def resolve_xrefs_to(self, defs):
         xrefs = [sym for sym in defs['symbol'] if sym['heuristic'] == "xrefsto"]
         for sym in xrefs:
-            if self.define_func_from_xref_to(sym['identifier'], sym['name']) == None:
+            if self.define_func_from_xref_to(sym['identifier'], sym['name']) is None:
                 print("[!] Can't find function {}".format(sym['name']))
 
-
-    def convert_const(self, const):
+    @staticmethod
+    def convert_const(const):
         try:
             if isinstance(const, int):
                 return const
@@ -268,7 +313,6 @@ class iBoot64View(BinaryView):
         except:
             return None
 
-
     def find_interesting(self):
         defs = self.load_defs()
 
@@ -282,48 +326,82 @@ class iBoot64View(BinaryView):
 
         self.resolve_xrefs_to(defs)
 
+        self.resolve_special_instructions()
+
+        self.resolve_special_registers()
+
+        if os.path.exists(IBOOT_H_PATH):
+            self.log("Adding iBoot Header")
+            with open(IBOOT_H_PATH) as iboot_h:
+                (type_result, errors) = self.parser.parse_types_from_source(iboot_h.read(), "iboot.h", self.platform)
+                if type_result:
+                    for type in type_result.types:
+                        self.define_type(Type.generate_auto_type_id("iboot.h", type.name), type.name, type.type)
+
+    def resolve_special_registers(self):
+        if os.path.exists(REGISTERS_PATH):
+            self.log(f"Loading registers from #{REGISTERS_PATH}")
+            with open(REGISTERS_PATH) as registers:
+                self.registers = yaml.load(registers, yaml.Loader)['aarch64']
+                self.registers['msr'] = dict({key.lower(): value for key, value in self.registers['msr'].items()})
+                self.registers['apple_system_registers'] = dict(
+                    {key.lower(): value for key, value in self.registers['apple_system_registers'].items()})
+                self.log(f"Loaded #{len(self.registers['msr'])} MSR names")
+                self.log(f"Loaded #{len(self.registers['apple_system_registers'])} Apple Register names")
+
+        if 'msr' not in self.registers:
+            return None
+
+        for reg_type in ['msr ', 'mrs ']:
+            self.log("Resolving MSR instructions")
+            ptr = self.start
+            while ptr is not None and ptr < self.end:
+                ptr = self.find_next_text(ptr, reg_type)
+                if isinstance(ptr, int):
+                    inst_bytes = self.read(ptr, self.arch.max_instr_length)
+                    inst_info = self.arch.get_instruction_info(inst_bytes, ptr)
+                    reg, _i = next(self.disassembly_text(ptr))
+                    reg = reg.split(' ', maxsplit=1)[1].split(',')[0].lower().strip()
+                    if reg in self.registers['msr'].keys():
+                        resolved_reg = self.registers['msr'][reg]
+                        self.set_comment_at(ptr, f"{resolved_reg['name']}: {resolved_reg['description']}")
+                        self.log(f"Found MSR: {reg} @ {ptr:#08x}")
+                    elif reg in self.registers['apple_system_registers'].keys():
+                        resolved_reg = self.registers['apple_system_registers'][reg]
+                        self.set_comment_at(ptr, f"{resolved_reg['name']}: {resolved_reg['description']}")
+                        self.log(f"Found Apple Register: {reg} @ {ptr:#08x}")
+                    else:
+                        self.log(f"Couldn't find MSR: {reg} @ {ptr:#08x}")
+                    ptr += inst_info.length
+
+    def resolve_special_instructions(self):
+        self.log("Resolving `hint` instructions")
+        ptr = self.start
+        while ptr is not None and ptr < self.end:
+            ptr = self.find_next_text(ptr, 'hint    #0x45')
+            if isinstance(ptr, int):
+                self.set_comment_at(ptr, 'hint 0x45 would enable the debugger on simulated hardware')
+                inst_bytes = self.read(ptr, self.arch.max_instr_length)
+                inst_info = self.arch.get_instruction_info(inst_bytes, ptr)
+                ptr += inst_info.length
 
     def find_reset(self, data):
-        i = 0
-        end = data.find_next_data(0, 'iBoot for')
-        if end is None:
-            end = data.find_next_data(0, 'SecureROM for')
-            if end is None:
-                return None
-        while i < end:
-            # Have to hand disassemble bytes since analysis hasn't yet been performed.
-            instr, width = self.arch.get_instruction_text(data[i:], 0)
-            try:
-                if instr[0].text == 'ldr':
-                    # Add current address to ldr argument for offset
-                    offset = instr[4].value + i
-                    return struct.unpack("Q", data[offset:offset + 8])[0]
-                i += width
-            except TypeError:
-                i += 1
-                continue
-        return None
+        self.base = None
+        for addr in range(0, 0x200, 4):
+            inst = self.raw.get_disassembly(addr, Architecture['aarch64'])
+            if "ldr" in inst:
+                self.reader.seek(int(inst.split(" ")[-1], 16))
+                self.base = self.reader.read64()
+                return self.base
 
-    # def find_panic(self):
-    #     ptr = self.start
-    #     while ptr < self.end:
-    #         ptr = self.find_next_data(ptr, b'double panic in ')
-
-    #         refs = self.get_code_refs(ptr)
-    #         if refs:
-    #             for i in refs:
-    #                 func_start = i.function.lowest_address
-    #                 # self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
-    #                 self.define_user_symbol(Symbol(SymbolType.FunctionSymbol, func_start, '_panic'))
-    #                 # TODO: Improve - Currently breaks on first ref
-    #                 return func_start
-    #         else:
-    #             ptr = ptr + 1
-    #     # Not sure the Binja idiomatic thing to return
-    #     # return -1
-    #     return None
+        if self.base is None:
+            self.log("Failed to find entry point", error=True)
+            return False
 
     def define_func_from_stringref(self, needle, func_name):
+        if isinstance(needle, str):
+            needle = bytes(needle, 'utf8')
+
         ptr = self.start
         while ptr < self.end:
             # using bv.find_next_data instead of bv.find_next_text here because it seems to be _way_ faster
@@ -333,7 +411,7 @@ class iBoot64View(BinaryView):
 
             if not ptr:
                 break
-            refs = self.get_code_refs(ptr)
+            refs = list(self.get_code_refs(ptr))
             if refs:
                 func_start = refs[0].function.lowest_address
                 self.define_function_at_address(func_start, func_name)
@@ -351,7 +429,7 @@ class iBoot64View(BinaryView):
             ptr = self.find_next_data(ptr, needle)
             if not ptr:
                 break
-            for ref in self.get_code_refs(ptr):
+            for ref in list(self.get_code_refs(ptr)):
                 refs.append(ref.function.lowest_address)
             for func_start in refs:
                 if refs.count(func_start) == refcount:
@@ -360,13 +438,12 @@ class iBoot64View(BinaryView):
             ptr = ptr + 1
         return None
 
-
     def define_func_from_bytesignature(self, signature, func_name):
         ptr = self.start
         while ptr < self.end:
             # Have to convert signature byearray to a string since find_next_data can't handle bytes on stable
             # fixed on dev in: https://github.com/Vector35/binaryninja-api/commit/c18b89e4cabfc28081a7893ccd4cf8956c9a797f
-            signature = "".join(chr(x) for x in signature)
+            signature = b"".join(chr(x) for x in signature)
             ptr = self.find_next_data(ptr, signature)
             if not ptr:
                 break
@@ -375,7 +452,6 @@ class iBoot64View(BinaryView):
             self.define_function_at_address(func_start, func_name)
             return func_start
         return None
-
 
     def define_func_from_constant(self, const, func_name):
         ptr = self.start
@@ -408,25 +484,8 @@ class iBoot64View(BinaryView):
         self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, address, name))
         print("[+] Added function {} at {}".format(name, hex(address)))
 
-
     # def define_func_from_bytesig(self, signature, func_name):
     #     ptr = self.start
     #     addrs = []
     #     while ptr < self.end:
     #         ptr = self.find_next_data
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
